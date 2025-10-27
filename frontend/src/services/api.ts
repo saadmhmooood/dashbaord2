@@ -875,11 +875,72 @@ class ApiService {
   }>> {
     const params = new URLSearchParams();
     if (companyId) params.append('company_id', companyId.toString());
-    
+
     const queryString = params.toString();
     const url = `/charts/dashboard${queryString ? `?${queryString}` : ''}`;
-    
+
     return this.makeRequest(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  async getDashboards(token: string): Promise<ApiResponse<Array<{
+    id: string;
+    name: string;
+    description: string;
+    version: number;
+    isActive: boolean;
+    widgetCount: number;
+    createdAt: string;
+  }>>> {
+    return this.makeRequest('/widgets/dashboards', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  async getDashboardWidgets(dashboardId: string, token: string): Promise<ApiResponse<{
+    dashboard: {
+      id: string;
+      name: string;
+      description: string;
+      gridConfig: any;
+      version: number;
+    };
+    widgets: Array<{
+      layoutId: string;
+      widgetId: string;
+      name: string;
+      description: string;
+      type: string;
+      component: string;
+      layoutConfig: any;
+      dataSourceConfig: any;
+      instanceConfig: any;
+      defaultConfig: any;
+      displayOrder: number;
+    }>;
+  }>> {
+    return this.makeRequest(`/widgets/dashboard/${dashboardId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  async getWidgetTypes(token: string): Promise<ApiResponse<Array<{
+    id: string;
+    name: string;
+    componentName: string;
+    defaultConfig: any;
+  }>>> {
+    return this.makeRequest('/widgets/types', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

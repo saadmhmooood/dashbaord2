@@ -1,9 +1,19 @@
+// routes/widgets.js
 const express = require('express');
 const router = express.Router();
 const database = require('../config/database');
-const auth = require('../middleware/auth');
 
-router.get('/dashboard/:dashboardId', auth, async (req, res) => {
+// Import the protect middleware function (adjust if your middleware uses a different name)
+const { protect } = require('../middleware/auth');
+
+// Runtime sanity check (temporary; safe to keep)
+if (typeof protect !== 'function') {
+  console.error('ERROR: protect middleware is not a function. Check ../middleware/auth.js export.');
+  throw new Error('Auth middleware not found (protect)');
+}
+
+// GET /api/widgets/dashboard/:dashboardId
+router.get('/dashboard/:dashboardId', protect, async (req, res) => {
   try {
     const { dashboardId } = req.params;
     const userId = req.user.id;
@@ -83,7 +93,8 @@ router.get('/dashboard/:dashboardId', auth, async (req, res) => {
   }
 });
 
-router.get('/dashboards', auth, async (req, res) => {
+// GET /api/widgets/dashboards
+router.get('/dashboards', protect, async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -108,7 +119,7 @@ router.get('/dashboards', auth, async (req, res) => {
         description: dashboard.description,
         version: dashboard.version,
         isActive: dashboard.is_active,
-        widgetCount: parseInt(dashboard.widget_count),
+        widgetCount: parseInt(dashboard.widget_count, 10),
         createdAt: dashboard.created_at
       }))
     });
@@ -122,7 +133,8 @@ router.get('/dashboards', auth, async (req, res) => {
   }
 });
 
-router.get('/types', auth, async (req, res) => {
+// GET /api/widgets/types
+router.get('/types', protect, async (req, res) => {
   try {
     const query = 'SELECT * FROM widget_types ORDER BY name';
     const result = await database.query(query);
