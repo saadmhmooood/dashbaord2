@@ -1,0 +1,337 @@
+{
+  "endpoint": "GET /api/widgets/dashboard/{dashboardId}",
+  "description": "This shows the exact structure returned by the widgets API. All 10 widgets for the MPFM dashboard are loaded from PostgreSQL and returned in this format.",
+  "request": {
+    "method": "GET",
+    "url": "http://localhost:5000/api/widgets/dashboard/abc-123-def-456",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "dashboard": {
+        "id": "abc-123-def-456",
+        "name": "MPFM Production Dashboard",
+        "description": "Main production dashboard for MPFM devices",
+        "gridConfig": {
+          "cols": 12,
+          "rowHeight": 100,
+          "margin": [10, 10],
+          "breakpoints": {
+            "lg": 1200,
+            "md": 996,
+            "sm": 768,
+            "xs": 480,
+            "xxs": 0
+          },
+          "containerPadding": [10, 10]
+        },
+        "version": 1
+      },
+      "widgets": [
+        {
+          "layoutId": "layout-001",
+          "widgetId": "widget-001",
+          "name": "OFR Metric",
+          "description": "Oil Flow Rate KPI",
+          "type": "kpi",
+          "component": "MetricsCard",
+          "layoutConfig": {
+            "x": 0,
+            "y": 0,
+            "w": 3,
+            "h": 1,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "ofr",
+            "unit": "l/min",
+            "title": "Oil flow rate",
+            "shortTitle": "OFR",
+            "icon": "/oildark.png",
+            "colorDark": "#4D3DF7",
+            "colorLight": "#F56C44"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 1
+        },
+        {
+          "layoutId": "layout-002",
+          "widgetId": "widget-002",
+          "name": "WFR Metric",
+          "description": "Water Flow Rate KPI",
+          "type": "kpi",
+          "component": "MetricsCard",
+          "layoutConfig": {
+            "x": 3,
+            "y": 0,
+            "w": 3,
+            "h": 1,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "wfr",
+            "unit": "l/min",
+            "title": "Water flow rate",
+            "shortTitle": "WFR",
+            "icon": "/waterdark.png",
+            "colorDark": "#46B8E9",
+            "colorLight": "#F6CA58"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 2
+        },
+        {
+          "layoutId": "layout-003",
+          "widgetId": "widget-003",
+          "name": "GFR Metric",
+          "description": "Gas Flow Rate KPI",
+          "type": "kpi",
+          "component": "MetricsCard",
+          "layoutConfig": {
+            "x": 6,
+            "y": 0,
+            "w": 3,
+            "h": 1,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "gfr",
+            "unit": "l/min",
+            "title": "Gas flow rate",
+            "shortTitle": "GFR",
+            "icon": "/gasdark.png",
+            "colorDark": "#F35DCB",
+            "colorLight": "#38BF9D"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 3
+        },
+        {
+          "layoutId": "layout-004",
+          "widgetId": "widget-004",
+          "name": "Last Refresh",
+          "description": "System Last Refresh Time",
+          "type": "kpi",
+          "component": "MetricsCard",
+          "layoutConfig": {
+            "x": 9,
+            "y": 0,
+            "w": 3,
+            "h": 1,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "last_refresh",
+            "title": "Last Refresh",
+            "icon": "clock",
+            "color": "#d82e75"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 4
+        },
+        {
+          "layoutId": "layout-005",
+          "widgetId": "widget-005",
+          "name": "OFR Chart",
+          "description": "Oil Flow Rate Line Chart",
+          "type": "line_chart",
+          "component": "FlowRateChart",
+          "layoutConfig": {
+            "x": 0,
+            "y": 1,
+            "w": 4,
+            "h": 2,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "ofr",
+            "unit": "l/min",
+            "title": "OFR",
+            "dataKey": "ofr"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 5,
+          "note": "THIS IS THE OFR CHART WIDGET - Key widget for lifecycle demonstration"
+        },
+        {
+          "layoutId": "layout-006",
+          "widgetId": "widget-006",
+          "name": "WFR Chart",
+          "description": "Water Flow Rate Line Chart",
+          "type": "line_chart",
+          "component": "FlowRateChart",
+          "layoutConfig": {
+            "x": 4,
+            "y": 1,
+            "w": 4,
+            "h": 2,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "wfr",
+            "unit": "l/min",
+            "title": "WFR",
+            "dataKey": "wfr"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 6
+        },
+        {
+          "layoutId": "layout-007",
+          "widgetId": "widget-007",
+          "name": "GFR Chart",
+          "description": "Gas Flow Rate Line Chart",
+          "type": "line_chart",
+          "component": "FlowRateChart",
+          "layoutConfig": {
+            "x": 8,
+            "y": 1,
+            "w": 4,
+            "h": 2,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metric": "gfr",
+            "unit": "l/min",
+            "title": "GFR",
+            "dataKey": "gfr"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 7
+        },
+        {
+          "layoutId": "layout-008",
+          "widgetId": "widget-008",
+          "name": "Fractions Chart",
+          "description": "GVF and WLR Fractions Chart",
+          "type": "fractions_chart",
+          "component": "FractionsChart",
+          "layoutConfig": {
+            "x": 0,
+            "y": 3,
+            "w": 6,
+            "h": 3,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metrics": ["gvf", "wlr"],
+            "title": "Fractions"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 8
+        },
+        {
+          "layoutId": "layout-009",
+          "widgetId": "widget-009",
+          "name": "GVF/WLR Donut Charts",
+          "description": "GVF and WLR Donut Charts",
+          "type": "donut_chart",
+          "component": "GVFWLRChart",
+          "layoutConfig": {
+            "x": 6,
+            "y": 3,
+            "w": 6,
+            "h": 3,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "metrics": ["gvf", "wlr"],
+            "title": "GVF/WLR"
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 5000
+          },
+          "displayOrder": 9
+        },
+        {
+          "layoutId": "layout-010",
+          "widgetId": "widget-010",
+          "name": "Production Map",
+          "description": "Device Locations Map",
+          "type": "map",
+          "component": "ProductionMap",
+          "layoutConfig": {
+            "x": 0,
+            "y": 6,
+            "w": 12,
+            "h": 3,
+            "minW": 2,
+            "minH": 1,
+            "static": false
+          },
+          "dataSourceConfig": {
+            "showDevices": true,
+            "showStatistics": true
+          },
+          "instanceConfig": {},
+          "defaultConfig": {
+            "refreshInterval": 30000
+          },
+          "displayOrder": 10
+        }
+      ]
+    }
+  },
+  "notes": {
+    "verification": "When you call this API, you should receive exactly 10 widgets in the response",
+    "dynamicData": "All widget configurations are loaded from PostgreSQL database tables",
+    "layoutConfig": "The x, y, w, h values define widget position and size in a 12-column grid",
+    "dataSourceConfig": "Contains widget-specific configuration (metrics, units, colors, etc.)",
+    "displayOrder": "Determines the order widgets appear on the dashboard",
+    "ofrChart": "Widget #5 (OFR Chart) is the key widget demonstrated in the lifecycle documentation"
+  },
+  "howToTest": {
+    "step1": "Login: POST /api/auth/login with admin@saherflow.com / Admin123",
+    "step2": "Copy JWT token from response",
+    "step3": "Get dashboards: GET /api/widgets/dashboards with Authorization header",
+    "step4": "Copy dashboard ID from response",
+    "step5": "Get widgets: GET /api/widgets/dashboard/{dashboardId} with Authorization header",
+    "step6": "Verify response contains 10 widgets as shown above"
+  }
+}

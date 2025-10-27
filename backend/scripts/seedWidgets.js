@@ -1,190 +1,236 @@
 const database = require('../config/database');
 
-async function seedWidgetTypes() {
+const seedWidgets = async () => {
+  const client = await database.pool.connect();
   try {
-    console.log('Seeding widget types...');
+    await client.query('BEGIN');
+
+    const adminResult = await client.query(`
+      SELECT id FROM "user" WHERE email = 'admin@saherflow.com' LIMIT 1
+    `);
+
+    if (adminResult.rows.length === 0) {
+      throw new Error('Admin user not found. Please run seedAdmin first.');
+    }
+
+    const adminId = adminResult.rows[0].id;
+
+    await client.query(`DELETE FROM dashboard_layouts`);
+    await client.query(`DELETE FROM dashboards`);
+    await client.query(`DELETE FROM widget_definitions`);
+    await client.query(`DELETE FROM widget_types`);
 
     const widgetTypes = [
+      { name: 'kpi', component_name: 'MetricsCard', default_config: { refreshInterval: 5000 } },
+      { name: 'line_chart', component_name: 'FlowRateChart', default_config: { refreshInterval: 5000 } },
+      { name: 'fractions_chart', component_name: 'FractionsChart', default_config: { refreshInterval: 5000 } },
+      { name: 'donut_chart', component_name: 'GVFWLRChart', default_config: { refreshInterval: 5000 } },
+      { name: 'map', component_name: 'ProductionMap', default_config: { refreshInterval: 30000 } }
+    ];
+
+    const widgetTypeIds = {};
+    for (const wt of widgetTypes) {
+      const result = await client.query(`
+        INSERT INTO widget_types (name, component_name, default_config)
+        VALUES ($1, $2, $3)
+        RETURNING id
+      `, [wt.name, wt.component_name, JSON.stringify(wt.default_config)]);
+      widgetTypeIds[wt.name] = result.rows[0].id;
+    }
+
+    const kpiWidgets = [
       {
-        name: 'gauge',
-        component_name: 'GaugeWidget',
-        default_config: {
-          min: 0,
-          max: 100,
-          unit: '',
-          thresholds: {
-            low: 30,
-            medium: 70,
-            high: 90
-          },
-          colors: {
-            low: '#22c55e',
-            medium: '#eab308',
-            high: '#ef4444'
-          }
+        name: 'OFR Metric',
+        description: 'Oil Flow Rate KPI',
+        widget_type_id: widgetTypeIds.kpi,
+        data_source_config: {
+          metric: 'ofr',
+          unit: 'l/min',
+          title: 'Oil flow rate',
+          shortTitle: 'OFR',
+          icon: '/oildark.png',
+          colorDark: '#4D3DF7',
+          colorLight: '#F56C44'
         }
       },
       {
-        name: 'line_chart',
-        component_name: 'LineChartWidget',
-        default_config: {
-          timeRange: '24h',
-          yAxisLabel: '',
-          xAxisLabel: 'Time',
-          showGrid: true,
-          showLegend: true,
-          curveType: 'smooth',
-          colors: ['#3b82f6', '#8b5cf6', '#ec4899'],
-          showOil: true,
-          showGas: true,
-          showWater: true
+        name: 'WFR Metric',
+        description: 'Water Flow Rate KPI',
+        widget_type_id: widgetTypeIds.kpi,
+        data_source_config: {
+          metric: 'wfr',
+          unit: 'l/min',
+          title: 'Water flow rate',
+          shortTitle: 'WFR',
+          icon: '/waterdark.png',
+          colorDark: '#46B8E9',
+          colorLight: '#F6CA58'
         }
       },
       {
-        name: 'bar_chart',
-        component_name: 'BarChartWidget',
-        default_config: {
-          orientation: 'vertical',
-          yAxisLabel: '',
-          xAxisLabel: '',
-          showGrid: true,
-          showLegend: true,
-          colors: ['#3b82f6', '#8b5cf6', '#ec4899']
+        name: 'GFR Metric',
+        description: 'Gas Flow Rate KPI',
+        widget_type_id: widgetTypeIds.kpi,
+        data_source_config: {
+          metric: 'gfr',
+          unit: 'l/min',
+          title: 'Gas flow rate',
+          shortTitle: 'GFR',
+          icon: '/gasdark.png',
+          colorDark: '#F35DCB',
+          colorLight: '#38BF9D'
         }
       },
       {
-        name: 'kpi',
-        component_name: 'KPIWidget',
-        default_config: {
-          format: 'number',
-          unit: '',
-          showTrend: true,
-          trendPeriod: '24h',
-          icon: 'trending-up',
-          size: 'medium'
-        }
-      },
-      {
-        name: 'table',
-        component_name: 'TableWidget',
-        default_config: {
-          pageSize: 10,
-          sortable: true,
-          filterable: true,
-          exportable: true,
-          pagination: true
-        }
-      },
-      {
-        name: 'pie_chart',
-        component_name: 'PieChartWidget',
-        default_config: {
-          showLegend: true,
-          showLabels: true,
-          innerRadius: 0,
-          colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
-        }
-      },
-      {
-        name: 'map',
-        component_name: 'MapWidget',
-        default_config: {
-          center: [0, 0],
-          zoom: 5,
-          markerType: 'default',
-          clusterMarkers: true,
-          showPopup: true
-        }
-      },
-      {
-        name: 'area_chart',
-        component_name: 'AreaChartWidget',
-        default_config: {
-          timeRange: '24h',
-          yAxisLabel: '',
-          xAxisLabel: 'Time',
-          showGrid: true,
-          showLegend: true,
-          fillOpacity: 0.3,
-          colors: ['#3b82f6', '#8b5cf6', '#ec4899']
-        }
-      },
-      {
-        name: 'donut_chart',
-        component_name: 'DonutChartWidget',
-        default_config: {
-          showLegend: true,
-          showLabels: true,
-          innerRadius: 0.6,
-          colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
-        }
-      },
-      {
-        name: 'stacked_bar',
-        component_name: 'StackedBarWidget',
-        default_config: {
-          orientation: 'vertical',
-          yAxisLabel: '',
-          xAxisLabel: '',
-          showGrid: true,
-          showLegend: true,
-          colors: ['#3b82f6', '#8b5cf6', '#ec4899']
-        }
-      },
-      {
-        name: 'alarms_table',
-        component_name: 'AlarmsTableWidget',
-        default_config: {
-          pageSize: 10,
-          sortable: true,
-          filterable: true,
-          showSeverity: true,
-          autoRefresh: true,
-          refreshInterval: 30000
+        name: 'Last Refresh',
+        description: 'System Last Refresh Time',
+        widget_type_id: widgetTypeIds.kpi,
+        data_source_config: {
+          metric: 'last_refresh',
+          title: 'Last Refresh',
+          icon: 'clock',
+          color: '#d82e75'
         }
       }
     ];
 
-    for (const widgetType of widgetTypes) {
-      const checkQuery = 'SELECT id FROM widget_types WHERE name = $1';
-      const existingResult = await database.query(checkQuery, [widgetType.name]);
-
-      if (existingResult.rows.length === 0) {
-        const insertQuery = `
-          INSERT INTO widget_types (name, component_name, default_config)
-          VALUES ($1, $2, $3)
-          RETURNING *
-        `;
-
-        const result = await database.query(insertQuery, [
-          widgetType.name,
-          widgetType.component_name,
-          JSON.stringify(widgetType.default_config)
-        ]);
-
-        console.log(`✓ Created widget type: ${widgetType.name}`);
-      } else {
-        console.log(`○ Widget type already exists: ${widgetType.name}`);
+    const chartWidgets = [
+      {
+        name: 'OFR Chart',
+        description: 'Oil Flow Rate Line Chart',
+        widget_type_id: widgetTypeIds.line_chart,
+        data_source_config: {
+          metric: 'ofr',
+          unit: 'l/min',
+          title: 'OFR',
+          dataKey: 'ofr'
+        }
+      },
+      {
+        name: 'WFR Chart',
+        description: 'Water Flow Rate Line Chart',
+        widget_type_id: widgetTypeIds.line_chart,
+        data_source_config: {
+          metric: 'wfr',
+          unit: 'l/min',
+          title: 'WFR',
+          dataKey: 'wfr'
+        }
+      },
+      {
+        name: 'GFR Chart',
+        description: 'Gas Flow Rate Line Chart',
+        widget_type_id: widgetTypeIds.line_chart,
+        data_source_config: {
+          metric: 'gfr',
+          unit: 'l/min',
+          title: 'GFR',
+          dataKey: 'gfr'
+        }
       }
+    ];
+
+    const otherWidgets = [
+      {
+        name: 'Fractions Chart',
+        description: 'GVF and WLR Fractions Chart',
+        widget_type_id: widgetTypeIds.fractions_chart,
+        data_source_config: {
+          metrics: ['gvf', 'wlr'],
+          title: 'Fractions'
+        }
+      },
+      {
+        name: 'GVF/WLR Donut Charts',
+        description: 'GVF and WLR Donut Charts',
+        widget_type_id: widgetTypeIds.donut_chart,
+        data_source_config: {
+          metrics: ['gvf', 'wlr'],
+          title: 'GVF/WLR'
+        }
+      },
+      {
+        name: 'Production Map',
+        description: 'Device Locations Map',
+        widget_type_id: widgetTypeIds.map,
+        data_source_config: {
+          showDevices: true,
+          showStatistics: true
+        }
+      }
+    ];
+
+    const allWidgets = [...kpiWidgets, ...chartWidgets, ...otherWidgets];
+    const widgetDefIds = {};
+
+    for (const widget of allWidgets) {
+      const result = await client.query(`
+        INSERT INTO widget_definitions (name, description, widget_type_id, data_source_config, created_by)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+      `, [
+        widget.name,
+        widget.description,
+        widget.widget_type_id,
+        JSON.stringify(widget.data_source_config),
+        adminId
+      ]);
+      widgetDefIds[widget.name] = result.rows[0].id;
     }
 
-    console.log('Widget types seeded successfully!');
+    const dashboardResult = await client.query(`
+      INSERT INTO dashboards (name, description, created_by)
+      VALUES ('MPFM Production Dashboard', 'Main production dashboard for MPFM devices', $1)
+      RETURNING id
+    `, [adminId]);
+
+    const dashboardId = dashboardResult.rows[0].id;
+
+    const layouts = [
+      { widget: 'OFR Metric', x: 0, y: 0, w: 3, h: 1, order: 1 },
+      { widget: 'WFR Metric', x: 3, y: 0, w: 3, h: 1, order: 2 },
+      { widget: 'GFR Metric', x: 6, y: 0, w: 3, h: 1, order: 3 },
+      { widget: 'Last Refresh', x: 9, y: 0, w: 3, h: 1, order: 4 },
+      { widget: 'OFR Chart', x: 0, y: 1, w: 4, h: 2, order: 5 },
+      { widget: 'WFR Chart', x: 4, y: 1, w: 4, h: 2, order: 6 },
+      { widget: 'GFR Chart', x: 8, y: 1, w: 4, h: 2, order: 7 },
+      { widget: 'Fractions Chart', x: 0, y: 3, w: 6, h: 3, order: 8 },
+      { widget: 'GVF/WLR Donut Charts', x: 6, y: 3, w: 6, h: 3, order: 9 },
+      { widget: 'Production Map', x: 0, y: 6, w: 12, h: 3, order: 10 }
+    ];
+
+    for (const layout of layouts) {
+      await client.query(`
+        INSERT INTO dashboard_layouts (dashboard_id, widget_definition_id, layout_config, display_order)
+        VALUES ($1, $2, $3, $4)
+      `, [
+        dashboardId,
+        widgetDefIds[layout.widget],
+        JSON.stringify({
+          x: layout.x,
+          y: layout.y,
+          w: layout.w,
+          h: layout.h,
+          minW: 2,
+          minH: 1,
+          static: false
+        }),
+        layout.order
+      ]);
+    }
+
+    await client.query('COMMIT');
+    console.log('✅ Widget system seeded successfully');
+    console.log(`  • Created ${widgetTypes.length} widget types`);
+    console.log(`  • Created ${allWidgets.length} widget definitions`);
+    console.log(`  • Created 1 dashboard with ${layouts.length} widgets`);
   } catch (error) {
-    console.error('Error seeding widget types:', error);
+    await client.query('ROLLBACK');
+    console.error('❌ Error seeding widgets:', error);
     throw error;
+  } finally {
+    client.release();
   }
-}
+};
 
-if (require.main === module) {
-  database.connect().then(async () => {
-    try {
-      await seedWidgetTypes();
-      process.exit(0);
-    } catch (error) {
-      console.error('Seeding failed:', error);
-      process.exit(1);
-    }
-  });
-}
-
-module.exports = seedWidgetTypes;
+module.exports = seedWidgets;

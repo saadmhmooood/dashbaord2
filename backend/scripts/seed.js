@@ -1,9 +1,10 @@
-require('dotenv').config(); 
+require('dotenv').config();
 const database = require('../config/database');
 const seedCompanies = require('./seedCompanies');
 const seedAdmin = require('./seedAdmin');
 const seedHierarchy = require('./seedHierarchy');
 const seedAlarms = require('./seedAlarms');
+const seedWidgets = require('./seedWidgets');
 
 const runAllSeeders = async () => {
   let exitCode = 0;
@@ -30,6 +31,9 @@ const runAllSeeders = async () => {
     console.log('🚨 Seeding alarms data...');
     await seedAlarms();
 
+    console.log('📊 Seeding widgets and dashboard...');
+    await seedWidgets();
+
     console.log('\n✅ All database seeding completed successfully!');
     console.log('\n📋 Summary:');
     console.log('  • Companies and domains configured');
@@ -38,6 +42,7 @@ const runAllSeeders = async () => {
     console.log('  • Complete hierarchy structure with devices');
     console.log('  • 24 hours of realistic device data');
     console.log('  • Comprehensive alarm system');
+    console.log('  • Dynamic widget system configured');
     console.log('\n🚀 You can now start the server with: npm run dev');
 
   } catch (error) {
