@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply font-sans;
+  background-color: #121429;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+#root {
+  overflow-x: hidden;
+}
+
+.recharts-surface:focus {
+  outline: none !important;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6B7280;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent horizontal scroll on all containers */
+* {
+  box-sizing: border-box;
+}
+
+/* Table responsive fixes */
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+table td, table th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
