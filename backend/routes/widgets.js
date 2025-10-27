@@ -58,6 +58,11 @@ router.get('/dashboard/:dashboardId', protect, async (req, res) => {
 
     const widgetsResult = await database.query(widgetsQuery, [dashboardId]);
 
+    console.log(`[WIDGET SYSTEM] Loaded dashboard ${dashboardId} with ${widgetsResult.rows.length} widgets from database`);
+    widgetsResult.rows.forEach((w, idx) => {
+      console.log(`  [${idx + 1}] ${w.widget_name} (${w.component_name}) - Layout: x=${w.layout_config?.x}, y=${w.layout_config?.y}, w=${w.layout_config?.w}, h=${w.layout_config?.h}`);
+    });
+
     res.json({
       success: true,
       data: {
@@ -153,6 +158,360 @@ router.get('/types', protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch widget types',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/widgets/dashboard/:dashboardId/layout
+// Update widget layout for a dashboard
+router.post('/dashboard/:dashboardId/layout', protect, async (req, res) => {
+  const client = await database.pool.connect();
+  try {
+    const { dashboardId } = req.params;
+    const { layouts } = req.body; // Array of { layoutId, layoutConfig: { x, y, w, h, minW, minH, static } }
+
+    if (!Array.isArray(layouts)) {
+      return res.status(400).json({
+        success: false,
+        message: 'layouts must be an array'
+      });
+    }
+
+    await client.query('BEGIN');
+
+    console.log(`[WIDGET SYSTEM] Updating ${layouts.length} widget layouts for dashboard ${dashboardId}`);
+
+    for (const layout of layouts) {
+      const { layoutId, layoutConfig } = layout;
+
+      const result = await client.query(`
+        UPDATE dashboard_layouts
+        SET layout_config = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2 AND dashboard_id = $3
+        RETURNING id
+      `, [JSON.stringify(layoutConfig), layoutId, dashboardId]);
+
+      if (result.rows.length > 0) {
+        console.log(`  Updated layout ${layoutId}: x=${layoutConfig.x}, y=${layoutConfig.y}, w=${layoutConfig.w}, h=${layoutConfig.h}`);
+      }
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      message: 'Widget layouts updated successfully'
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating widget layouts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update widget layouts',
+      error: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/widgets/dashboard/:dashboardId/widget
+// Add a new widget to a dashboard
+router.post('/dashboard/:dashboardId/widget', protect, async (req, res) => {
+  const client = await database.pool.connect();
+  try {
+    const { dashboardId } = req.params;
+    const { widgetDefinitionId, layoutConfig, instanceConfig, displayOrder } = req.body;
+
+    if (!widgetDefinitionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'widgetDefinitionId is required'
+      });
+    }
+
+    await client.query('BEGIN');
+
+    const result = await client.query(`
+      INSERT INTO dashboard_layouts (
+        dashboard_id,
+        widget_definition_id,
+        layout_config,
+        instance_config,
+        display_order
+      ) VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
+    `, [
+      dashboardId,
+      widgetDefinitionId,
+      JSON.stringify(layoutConfig || { x: 0, y: 0, w: 4, h: 2, minW: 2, minH: 1, static: false }),
+      JSON.stringify(instanceConfig || {}),
+      displayOrder || 0
+    ]);
+
+    await client.query('COMMIT');
+
+    console.log(`[WIDGET SYSTEM] Added widget ${widgetDefinitionId} to dashboard ${dashboardId}`);
+
+    res.json({
+      success: true,
+      data: {
+        layoutId: result.rows[0].id
+      },
+      message: 'Widget added successfully'
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error adding widget:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add widget',
+      error: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// DELETE /api/widgets/dashboard/:dashboardId/layout/:layoutId
+// Remove a widget from a dashboard
+router.delete('/dashboard/:dashboardId/layout/:layoutId', protect, async (req, res) => {
+  try {
+    const { dashboardId, layoutId } = req.params;
+
+    const result = await database.query(`
+      DELETE FROM dashboard_layouts
+      WHERE id = $1 AND dashboard_id = $2
+      RETURNING id
+    `, [layoutId, dashboardId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Widget layout not found'
+      });
+    }
+
+    console.log(`[WIDGET SYSTEM] Removed widget layout ${layoutId} from dashboard ${dashboardId}`);
+
+    res.json({
+      success: true,
+      message: 'Widget removed successfully'
+    });
+  } catch (error) {
+    console.error('Error removing widget:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove widget',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/widgets/definitions
+// Get all available widget definitions
+router.get('/definitions', protect, async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        wd.id,
+        wd.name,
+        wd.description,
+        wd.data_source_config,
+        wt.name as widget_type,
+        wt.component_name,
+        wt.default_config
+      FROM widget_definitions wd
+      INNER JOIN widget_types wt ON wd.widget_type_id = wt.id
+      ORDER BY wd.name
+    `;
+
+    const result = await database.query(query);
+
+    res.json({
+      success: true,
+      data: result.rows.map(def => ({
+        id: def.id,
+        name: def.name,
+        description: def.description,
+        dataSourceConfig: def.data_source_config,
+        widgetType: def.widget_type,
+        componentName: def.component_name,
+        defaultConfig: def.default_config
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching widget definitions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch widget definitions',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/widgets/definitions
+// Create a new widget definition
+router.post('/definitions', protect, async (req, res) => {
+  try {
+    const { name, description, widgetTypeId, dataSourceConfig } = req.body;
+    const userId = req.user.id;
+
+    if (!name || !widgetTypeId || !dataSourceConfig) {
+      return res.status(400).json({
+        success: false,
+        message: 'name, widgetTypeId, and dataSourceConfig are required'
+      });
+    }
+
+    const result = await database.query(`
+      INSERT INTO widget_definitions (
+        name,
+        description,
+        widget_type_id,
+        data_source_config,
+        created_by
+      ) VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
+    `, [
+      name,
+      description || '',
+      widgetTypeId,
+      JSON.stringify(dataSourceConfig),
+      userId
+    ]);
+
+    console.log(`[WIDGET SYSTEM] Created widget definition: ${name}`);
+
+    res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id
+      },
+      message: 'Widget definition created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating widget definition:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create widget definition',
+      error: error.message
+    });
+  }
+});
+
+// PUT /api/widgets/definitions/:id
+// Update widget definition (for changing units, titles, etc.)
+router.put('/definitions/:id', protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, dataSourceConfig } = req.body;
+
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (name) {
+      updates.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+
+    if (description !== undefined) {
+      updates.push(`description = $${paramCount++}`);
+      values.push(description);
+    }
+
+    if (dataSourceConfig) {
+      updates.push(`data_source_config = $${paramCount++}`);
+      values.push(JSON.stringify(dataSourceConfig));
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No fields to update'
+      });
+    }
+
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
+
+    const result = await database.query(`
+      UPDATE widget_definitions
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING id
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Widget definition not found'
+      });
+    }
+
+    console.log(`[WIDGET SYSTEM] Updated widget definition ${id}`);
+
+    res.json({
+      success: true,
+      message: 'Widget definition updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating widget definition:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update widget definition',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/widgets/dashboards
+// Create a new dashboard
+router.post('/dashboards', protect, async (req, res) => {
+  try {
+    const { name, description, gridConfig } = req.body;
+    const userId = req.user.id;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'name is required'
+      });
+    }
+
+    const result = await database.query(`
+      INSERT INTO dashboards (name, description, grid_config, created_by)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    `, [
+      name,
+      description || '',
+      JSON.stringify(gridConfig || {
+        cols: 12,
+        rowHeight: 100,
+        margin: [10, 10],
+        breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
+        containerPadding: [10, 10]
+      }),
+      userId
+    ]);
+
+    console.log(`[WIDGET SYSTEM] Created dashboard: ${name}`);
+
+    res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id
+      },
+      message: 'Dashboard created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating dashboard:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create dashboard',
       error: error.message
     });
   }

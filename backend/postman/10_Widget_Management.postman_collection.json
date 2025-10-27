@@ -1,0 +1,472 @@
+{
+  "info": {
+    "name": "10. Widget Management API",
+    "description": "API endpoints for managing dynamic dashboard widgets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "List All Dashboards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboards"]
+            },
+            "description": "Get all dashboards accessible to the current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard Widgets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/:dashboardId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", ":dashboardId"],
+              "variable": [
+                {
+                  "key": "dashboardId",
+                  "value": "",
+                  "description": "Dashboard UUID"
+                }
+              ]
+            },
+            "description": "Get all widgets configured for a specific dashboard with layout and data configurations"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Custom Dashboard\",\n  \"description\": \"My custom production dashboard\",\n  \"gridConfig\": {\n    \"cols\": 12,\n    \"rowHeight\": 100,\n    \"margin\": [10, 10],\n    \"breakpoints\": {\n      \"lg\": 1200,\n      \"md\": 996,\n      \"sm\": 768,\n      \"xs\": 480,\n      \"xxs\": 0\n    },\n    \"containerPadding\": [10, 10]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboards"]
+            },
+            "description": "Create a new dashboard with grid configuration"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Widget Layouts",
+      "item": [
+        {
+          "name": "Update Widget Layouts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"layouts\": [\n    {\n      \"layoutId\": \"uuid-1\",\n      \"layoutConfig\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 6,\n        \"h\": 2,\n        \"minW\": 2,\n        \"minH\": 1,\n        \"static\": false\n      }\n    },\n    {\n      \"layoutId\": \"uuid-2\",\n      \"layoutConfig\": {\n        \"x\": 6,\n        \"y\": 0,\n        \"w\": 6,\n        \"h\": 2,\n        \"minW\": 2,\n        \"minH\": 1,\n        \"static\": false\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/:dashboardId/layout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", ":dashboardId", "layout"],
+              "variable": [
+                {
+                  "key": "dashboardId",
+                  "value": "",
+                  "description": "Dashboard UUID"
+                }
+              ]
+            },
+            "description": "Update positions and sizes of multiple widgets after drag-drop"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Widget to Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"widgetDefinitionId\": \"widget-def-uuid\",\n  \"layoutConfig\": {\n    \"x\": 0,\n    \"y\": 3,\n    \"w\": 4,\n    \"h\": 2,\n    \"minW\": 2,\n    \"minH\": 1,\n    \"static\": false\n  },\n  \"instanceConfig\": {},\n  \"displayOrder\": 11\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/:dashboardId/widget",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", ":dashboardId", "widget"],
+              "variable": [
+                {
+                  "key": "dashboardId",
+                  "value": "",
+                  "description": "Dashboard UUID"
+                }
+              ]
+            },
+            "description": "Add a new widget instance to a dashboard"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Widget from Dashboard",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/:dashboardId/layout/:layoutId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", ":dashboardId", "layout", ":layoutId"],
+              "variable": [
+                {
+                  "key": "dashboardId",
+                  "value": "",
+                  "description": "Dashboard UUID"
+                },
+                {
+                  "key": "layoutId",
+                  "value": "",
+                  "description": "Layout UUID"
+                }
+              ]
+            },
+            "description": "Remove a widget instance from a dashboard"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Widget Definitions",
+      "item": [
+        {
+          "name": "List Widget Definitions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/definitions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "definitions"]
+            },
+            "description": "Get all available widget definitions that can be added to dashboards"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Widget Definition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Temperature Metric\",\n  \"description\": \"Temperature sensor reading\",\n  \"widgetTypeId\": \"widget-type-uuid\",\n  \"dataSourceConfig\": {\n    \"metric\": \"temperature\",\n    \"unit\": \"°C\",\n    \"title\": \"Temperature\",\n    \"shortTitle\": \"TEMP\",\n    \"icon\": \"/temperature.png\",\n    \"colorDark\": \"#FF6B6B\",\n    \"colorLight\": \"#FFA07A\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/definitions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "definitions"]
+            },
+            "description": "Create a new widget definition for a specific metric/device type"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Widget Definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oil Flow Rate (Updated)\",\n  \"description\": \"Updated description\",\n  \"dataSourceConfig\": {\n    \"metric\": \"ofr\",\n    \"unit\": \"m³/h\",\n    \"title\": \"Oil Flow Rate\",\n    \"shortTitle\": \"OFR\",\n    \"icon\": \"/oildark.png\",\n    \"colorDark\": \"#4D3DF7\",\n    \"colorLight\": \"#F56C44\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/definitions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "definitions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Widget Definition UUID"
+                }
+              ]
+            },
+            "description": "Update widget configuration (units, titles, colors, etc.). Changes reflect on all dashboards using this widget."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Widget Types",
+      "item": [
+        {
+          "name": "List Widget Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "types"]
+            },
+            "description": "Get all available widget types (kpi, line_chart, map, etc.)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complete Workflow",
+      "item": [
+        {
+          "name": "1. List Available Widgets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/definitions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "definitions"]
+            },
+            "description": "Step 1: Admin views available widgets"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Custom Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('newDashboardId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp Dashboard\",\n  \"description\": \"Custom dashboard for Acme Corporation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboards"]
+            },
+            "description": "Step 2: Admin creates new dashboard"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Add OFR Widget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"widgetDefinitionId\": \"{{ofrWidgetId}}\",\n  \"layoutConfig\": {\n    \"x\": 0,\n    \"y\": 0,\n    \"w\": 3,\n    \"h\": 1,\n    \"minW\": 2,\n    \"minH\": 1,\n    \"static\": false\n  },\n  \"displayOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/{{newDashboardId}}/widget",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", "{{newDashboardId}}", "widget"]
+            },
+            "description": "Step 3: Admin adds OFR widget to dashboard"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Add WFR Widget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"widgetDefinitionId\": \"{{wfrWidgetId}}\",\n  \"layoutConfig\": {\n    \"x\": 3,\n    \"y\": 0,\n    \"w\": 3,\n    \"h\": 1,\n    \"minW\": 2,\n    \"minH\": 1,\n    \"static\": false\n  },\n  \"displayOrder\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/{{newDashboardId}}/widget",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", "{{newDashboardId}}", "widget"]
+            },
+            "description": "Step 4: Admin adds WFR widget to dashboard"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Dashboard to View Widgets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/dashboard/{{newDashboardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "dashboard", "{{newDashboardId}}"]
+            },
+            "description": "Step 5: Verify widgets are configured correctly"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
