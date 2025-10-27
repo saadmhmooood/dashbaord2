@@ -18,6 +18,7 @@ interface FlowRateChartsProps {
   hierarchyChartData?: HierarchyChartData | null;
   timeRange: '1day' | '7days' | '1month';
   isDeviceOffline?: boolean;
+  widgetConfigs?: any[];
 }
 
 interface SingleFlowRateChartProps {
@@ -146,7 +147,7 @@ const FlowRateChart: React.FC<SingleFlowRateChartProps> = ({
   );
 };
 
-const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyChartData, timeRange, isDeviceOffline = false }) => {
+const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyChartData, timeRange, isDeviceOffline = false, widgetConfigs = [] }) => {
   const [modalOpen, setModalOpen] = useState<'ofr' | 'wfr' | 'gfr' | null>(null);
   const [showInfoCard, setShowInfoCard] = useState<'ofr' | 'wfr' | 'gfr' | null>(null);
   const { theme } = useTheme();
@@ -310,20 +311,30 @@ const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyCha
     );
   };
 
+  const getChartConfig = (metric: string) => {
+    if (widgetConfigs.length === 0) return null;
+    return widgetConfigs.find(w => w.dataSourceConfig?.metric === metric);
+  };
+
+  const ofrConfig = getChartConfig('ofr');
+  const wfrConfig = getChartConfig('wfr');
+  const gfrConfig = getChartConfig('gfr');
+
   return (
     <>
       <div className="grid md:grid-cols-3 lg:grid-flow-cols-3 grid-cols-1 gap-4">
-        <div className="relative">
-          <FlowRateChart
-            title="OFR"
-            unit="l/min"
-            data={ofrData}
-            dataKey="line"
-            maxValue={ofrWfrMaxValue}
-            timeRange={timeRange}
-            onExpandClick={() => setModalOpen('ofr')}
-            onInfoClick={() => setShowInfoCard('ofr')}
-          />
+        {ofrConfig && (
+          <div className="relative">
+            <FlowRateChart
+              title={ofrConfig.dataSourceConfig?.title || "OFR"}
+              unit={ofrConfig.dataSourceConfig?.unit || "l/min"}
+              data={ofrData}
+              dataKey="line"
+              maxValue={ofrWfrMaxValue}
+              timeRange={timeRange}
+              onExpandClick={() => setModalOpen('ofr')}
+              onInfoClick={() => setShowInfoCard('ofr')}
+            />
           {showInfoCard === 'ofr' && (
             <div className={`absolute top-16 left-4 right-4 z-50 p-4 rounded-lg shadow-xl border ${theme === 'dark' ? 'bg-[#1a2847] border-gray-700' : 'bg-white border-gray-200'}`}>
               <div className="flex items-start justify-between mb-2">
@@ -337,18 +348,20 @@ const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyCha
               </p>
             </div>
           )}
-        </div>
-        <div className="relative">
-          <FlowRateChart
-            title="WFR"
-            unit="l/min"
-            data={wfrData}
-            dataKey="line"
-            maxValue={ofrWfrMaxValue}
-            timeRange={timeRange}
-            onExpandClick={() => setModalOpen('wfr')}
-            onInfoClick={() => setShowInfoCard('wfr')}
-          />
+          </div>
+        )}
+        {wfrConfig && (
+          <div className="relative">
+            <FlowRateChart
+              title={wfrConfig.dataSourceConfig?.title || "WFR"}
+              unit={wfrConfig.dataSourceConfig?.unit || "l/min"}
+              data={wfrData}
+              dataKey="line"
+              maxValue={ofrWfrMaxValue}
+              timeRange={timeRange}
+              onExpandClick={() => setModalOpen('wfr')}
+              onInfoClick={() => setShowInfoCard('wfr')}
+            />
           {showInfoCard === 'wfr' && (
             <div className={`absolute top-16 left-4 right-4 z-50 p-4 rounded-lg shadow-xl border ${theme === 'dark' ? 'bg-[#1a2847] border-gray-700' : 'bg-white border-gray-200'}`}>
               <div className="flex items-start justify-between mb-2">
@@ -362,18 +375,20 @@ const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyCha
               </p>
             </div>
           )}
-        </div>
-        <div className="relative">
-          <FlowRateChart
-            title="GFR"
-            unit="l/min"
-            data={gfrData}
-            dataKey="line"
-            maxValue={gfrMaxValue}
-            timeRange={timeRange}
-            onExpandClick={() => setModalOpen('gfr')}
-            onInfoClick={() => setShowInfoCard('gfr')}
-          />
+          </div>
+        )}
+        {gfrConfig && (
+          <div className="relative">
+            <FlowRateChart
+              title={gfrConfig.dataSourceConfig?.title || "GFR"}
+              unit={gfrConfig.dataSourceConfig?.unit || "l/min"}
+              data={gfrData}
+              dataKey="line"
+              maxValue={gfrMaxValue}
+              timeRange={timeRange}
+              onExpandClick={() => setModalOpen('gfr')}
+              onInfoClick={() => setShowInfoCard('gfr')}
+            />
           {showInfoCard === 'gfr' && (
             <div className={`absolute top-16 left-4 right-4 z-50 p-4 rounded-lg shadow-xl border ${theme === 'dark' ? 'bg-[#1a2847] border-gray-700' : 'bg-white border-gray-200'}`}>
               <div className="flex items-start justify-between mb-2">
@@ -387,31 +402,32 @@ const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyCha
               </p>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </div>
 
       <ChartModal
         isOpen={modalOpen === 'ofr'}
         onClose={() => setModalOpen(null)}
-        title="OFR (l/min)"
+        title={`${ofrConfig?.dataSourceConfig?.title || 'OFR'} (${ofrConfig?.dataSourceConfig?.unit || 'l/min'})`}
       >
-        {renderModalChart(ofrData, 'line', ofrWfrMaxValue, 'OFR')}
+        {renderModalChart(ofrData, 'line', ofrWfrMaxValue, ofrConfig?.dataSourceConfig?.title || 'OFR')}
       </ChartModal>
 
       <ChartModal
         isOpen={modalOpen === 'wfr'}
         onClose={() => setModalOpen(null)}
-        title="WFR (l/min)"
+        title={`${wfrConfig?.dataSourceConfig?.title || 'WFR'} (${wfrConfig?.dataSourceConfig?.unit || 'l/min'})`}
       >
-        {renderModalChart(wfrData, 'line', ofrWfrMaxValue, 'WFR')}
+        {renderModalChart(wfrData, 'line', ofrWfrMaxValue, wfrConfig?.dataSourceConfig?.title || 'WFR')}
       </ChartModal>
 
       <ChartModal
         isOpen={modalOpen === 'gfr'}
         onClose={() => setModalOpen(null)}
-        title="GFR (l/min)"
+        title={`${gfrConfig?.dataSourceConfig?.title || 'GFR'} (${gfrConfig?.dataSourceConfig?.unit || 'l/min'})`}
       >
-        {renderModalChart(gfrData, 'line', gfrMaxValue, 'GFR')}
+        {renderModalChart(gfrData, 'line', gfrMaxValue, gfrConfig?.dataSourceConfig?.title || 'GFR')}
       </ChartModal>
     </>
   );

@@ -72,11 +72,13 @@ const FitBounds: React.FC<{
 interface ProductionMapProps {
   selectedHierarchy?: HierarchyNode | null;
   selectedDevice?: any | null;
+  widgetConfig?: any;
 }
 
 const ProductionMap: React.FC<ProductionMapProps> = ({
   selectedHierarchy,
   selectedDevice,
+  widgetConfig,
 }) => {
   const { theme } = useTheme();
   const { token } = useAuth();

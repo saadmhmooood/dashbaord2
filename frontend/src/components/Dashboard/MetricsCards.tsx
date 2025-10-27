@@ -12,6 +12,7 @@ interface MetricsCardsProps {
   hierarchyChartData?: HierarchyChartData | null;
   lastRefresh?: Date | null;
   isDeviceOffline?: boolean;
+  widgetConfigs?: any[];
 
   /**
    * Called when the component requests a refresh.
@@ -32,6 +33,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
   hierarchyChartData,
   lastRefresh = null,
   isDeviceOffline = false,
+  widgetConfigs = [],
   onRefreshRequested,
   refreshIntervalMs = 5000,
 }) => {
@@ -190,7 +192,34 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
     return Math.max(10, Math.min(16, cardWidth / 18));
   };
 
-  const metrics = [
+  const metrics = widgetConfigs.length > 0 ? widgetConfigs.map(config => {
+    const dsConfig = config.dataSourceConfig || {};
+    let value = 0;
+
+    switch (dsConfig.metric) {
+      case 'ofr':
+        value = flowRateData.totalOFR;
+        break;
+      case 'wfr':
+        value = flowRateData.totalWFR;
+        break;
+      case 'gfr':
+        value = flowRateData.totalGFR;
+        break;
+      default:
+        value = 0;
+    }
+
+    return {
+      icon: dsConfig.icon || '/oildark.png',
+      title: dsConfig.title || 'Metric',
+      shortTitle: dsConfig.shortTitle || dsConfig.title || 'N/A',
+      value: value.toFixed(2),
+      unit: dsConfig.unit || 'l/min',
+      color: theme === 'dark' ? (dsConfig.colorDark || '#4D3DF7') : (dsConfig.colorLight || '#F56C44'),
+      metric: dsConfig.metric
+    };
+  }).filter(m => m.metric !== 'last_refresh') : [
     {
       icon: '/oildark.png',
       title: 'Oil flow rate',
@@ -198,6 +227,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
       value: flowRateData.totalOFR.toFixed(2),
       unit: 'l/min',
       color: theme === 'dark' ? '#4D3DF7' : '#F56C44',
+      metric: 'ofr'
     },
     {
       icon: '/waterdark.png',
@@ -206,6 +236,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
       value: flowRateData.totalWFR.toFixed(2),
       unit: 'l/min',
       color: theme === 'dark' ? '#46B8E9' : '#F6CA58',
+      metric: 'wfr'
     },
     {
       icon: '/gasdark.png',
@@ -214,6 +245,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
       value: flowRateData.totalGFR.toFixed(2),
       unit: 'l/min',
       color: theme === 'dark' ? '#F35DCB' : '#38BF9D',
+      metric: 'gfr'
     },
   ];
 
@@ -228,6 +260,9 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
     : currentTime;
 
   const lastRefreshLabel = lastRefresh ? 'From server' : 'Live';
+
+  const showLastRefresh = widgetConfigs.length === 0 || widgetConfigs.some(w => w.dataSourceConfig?.metric === 'last_refresh');
+  const lastRefreshConfig = widgetConfigs.find(w => w.dataSourceConfig?.metric === 'last_refresh')?.dataSourceConfig || { color: '#d82e75' };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4">
@@ -286,20 +321,21 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
       ))}
 
       {/* Last Refresh card — only this shows refresh animation */}
-      <div
-        ref={(el) => (cardRefs.current[3] = el)}
-        className={`rounded-lg p-3 md:p-4 transition-all duration-300 flex flex-col justify-between overflow-hidden ${
-          theme === 'dark' ? 'bg-[#162345]' : 'bg-white border border-gray-200'
-        } ${
-          isRefreshing ? 'ring-2 ring-blue-400 ring-opacity-50 shadow-lg' : ''
-        }`}
-      >
-        <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-          <div
-            className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: '#d82e75' }}
-          >
-            <AlarmClock className="w-4 h-4 md:w-5 md:h-5 text-white" />
+      {showLastRefresh && (
+        <div
+          ref={(el) => (cardRefs.current[3] = el)}
+          className={`rounded-lg p-3 md:p-4 transition-all duration-300 flex flex-col justify-between overflow-hidden ${
+            theme === 'dark' ? 'bg-[#162345]' : 'bg-white border border-gray-200'
+          } ${
+            isRefreshing ? 'ring-2 ring-blue-400 ring-opacity-50 shadow-lg' : ''
+          }`}
+        >
+          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+            <div
+              className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: lastRefreshConfig.color || '#d82e75' }}
+            >
+              <AlarmClock className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -350,7 +386,8 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
               : ''}
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

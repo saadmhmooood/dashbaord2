@@ -8,9 +8,10 @@ interface GVFWLRChartsProps {
   chartData?: DeviceChartData | null;
   hierarchyChartData?: HierarchyChartData | null;
   isDeviceOffline?: boolean;
+  widgetConfig?: any;
 }
 
-const GVFWLRCharts: React.FC<GVFWLRChartsProps> = ({ chartData, hierarchyChartData, isDeviceOffline = false }) => {
+const GVFWLRCharts: React.FC<GVFWLRChartsProps> = ({ chartData, hierarchyChartData, isDeviceOffline = false, widgetConfig }) => {
   const { theme } = useTheme();
   const [showInfoCard, setShowInfoCard] = useState(false);
   const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
@@ -100,7 +101,7 @@ const GVFWLRCharts: React.FC<GVFWLRChartsProps> = ({ chartData, hierarchyChartDa
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           }`}
         >
-          GVF/WLR
+          {widgetConfig?.dataSourceConfig?.title || 'GVF/WLR'}
         </h2>
         <Info
           size={16}

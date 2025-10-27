@@ -17,6 +17,7 @@ interface FractionsChartProps {
   chartData?: DeviceChartData | null;
   hierarchyChartData?: HierarchyChartData | null;
   isDeviceOffline?: boolean;
+  widgetConfig?: any;
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -25,6 +26,7 @@ const FractionsChart: React.FC<FractionsChartProps> = ({
   chartData,
   hierarchyChartData,
   isDeviceOffline = false,
+  widgetConfig,
 }) => {
   const { theme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);

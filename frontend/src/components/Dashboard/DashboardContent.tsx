@@ -200,57 +200,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       if (!token) return;
 
       try {
-        console.log('[WIDGET SYSTEM] Step 1: Fetching list of dashboards from API...');
         const dashboardsResponse = await apiService.getDashboards(token);
 
         if (dashboardsResponse.success && dashboardsResponse.data && dashboardsResponse.data.length > 0) {
           const firstDashboard = dashboardsResponse.data[0];
-          console.log('[WIDGET SYSTEM] Step 2: Found dashboard:', firstDashboard.name, 'ID:', firstDashboard.id);
-          console.log('[WIDGET SYSTEM] Dashboard has', firstDashboard.widgetCount, 'widgets configured');
-
-          console.log('[WIDGET SYSTEM] Step 3: Fetching widget configurations from database...');
           const widgetsResponse = await apiService.getDashboardWidgets(firstDashboard.id, token);
 
           if (widgetsResponse.success && widgetsResponse.data) {
-            console.log('[WIDGET SYSTEM] Step 4: Successfully loaded widgets from PostgreSQL database');
-            console.log('[WIDGET SYSTEM] Total widgets loaded:', widgetsResponse.data.widgets.length);
-
-            console.log('\n[WIDGET SYSTEM] === ALL WIDGETS LOADED FROM DATABASE ===');
-            widgetsResponse.data.widgets.forEach((widget, index) => {
-              console.log(`[WIDGET ${index + 1}/${widgetsResponse.data.widgets.length}]`, {
-                name: widget.name,
-                type: widget.type,
-                component: widget.component,
-                displayOrder: widget.displayOrder,
-                dataSource: widget.dataSourceConfig
-              });
-            });
-
-            const ofrChartWidget = widgetsResponse.data.widgets.find(w =>
-              w.component === 'FlowRateChart' && w.dataSourceConfig?.metric === 'ofr'
-            );
-
-            if (ofrChartWidget) {
-              console.log('\n[OFR CHART LIFECYCLE] === OFR CHART WIDGET DETAILS ===');
-              console.log('[OFR CHART LIFECYCLE] Step 1: Widget loaded from database');
-              console.log('[OFR CHART LIFECYCLE] Widget ID:', ofrChartWidget.widgetId);
-              console.log('[OFR CHART LIFECYCLE] Layout ID:', ofrChartWidget.layoutId);
-              console.log('[OFR CHART LIFECYCLE] Name:', ofrChartWidget.name);
-              console.log('[OFR CHART LIFECYCLE] Component:', ofrChartWidget.component);
-              console.log('[OFR CHART LIFECYCLE] Position:', ofrChartWidget.layoutConfig);
-              console.log('[OFR CHART LIFECYCLE] Data Source Config:', ofrChartWidget.dataSourceConfig);
-              console.log('[OFR CHART LIFECYCLE] Step 2: Widget will be rendered by FlowRateCharts component');
-              console.log('[OFR CHART LIFECYCLE] Step 3: Component will fetch data from charts API');
-              console.log('[OFR CHART LIFECYCLE] Step 4: Chart will display with data from database configuration\n');
-            }
-
             setWidgets(widgetsResponse.data.widgets);
             setDashboardConfig(widgetsResponse.data.dashboard);
             setWidgetsLoaded(true);
-            console.log('[WIDGET SYSTEM] Step 5: Widgets state updated, dashboard ready to render\n');
           }
         } else {
-          console.warn('[WIDGET SYSTEM] No dashboards found, using static configuration');
           setWidgetsLoaded(true);
         }
       } catch (error) {
@@ -437,13 +398,19 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }
   };
 
-  const shouldRenderWidget = (widgetType: string): boolean => {
-    if (widgets.length === 0) return true;
-    return widgets.some(w => w.type === widgetType || w.component.includes(widgetType));
+  const getWidgetConfig = (componentName: string) => {
+    if (widgets.length === 0) return null;
+    return widgets.find(w => w.component === componentName);
   };
 
-  const getWidgetsByComponent = (componentName: string) => {
-    return widgets.filter(w => w.component === componentName);
+  const getMetricsWidgets = () => {
+    if (widgets.length === 0) return [];
+    return widgets.filter(w => w.component === 'MetricsCard').sort((a, b) => a.displayOrder - b.displayOrder);
+  };
+
+  const getChartWidgets = () => {
+    if (widgets.length === 0) return [];
+    return widgets.filter(w => w.component === 'FlowRateChart').sort((a, b) => a.displayOrder - b.displayOrder);
   };
 
   return (
@@ -499,7 +466,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             </div>
           </div>
 
-          {widgetsLoaded && shouldRenderWidget('kpi') && (
+          {widgetsLoaded && getMetricsWidgets().length > 0 && (
             <MetricsCards
               selectedHierarchy={selectedHierarchy}
               selectedDevice={selectedDevice}
@@ -507,32 +474,35 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               hierarchyChartData={metricsHierarchyChartData}
               lastRefresh={lastRefresh}
               isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+              widgetConfigs={getMetricsWidgets()}
             />
           )}
 
-          {widgetsLoaded && shouldRenderWidget('line_chart') && (
+          {widgetsLoaded && getChartWidgets().length > 0 && (
             <FlowRateCharts
               chartData={flowRateChartData}
               hierarchyChartData={flowRateHierarchyChartData}
               timeRange={timeRange as '1day' | '7days' | '1month'}
               isDeviceOffline={flowRateChartData?.device?.status === 'Offline'}
+              widgetConfigs={getChartWidgets()}
             />
           )}
 
           {widgetsLoaded && (
             <>
               <div className="hidden md:grid md:grid-cols-1 lg:grid-cols-2 gap-4 my-4">
-                {shouldRenderWidget('fractions_chart') && (
+                {getWidgetConfig('FractionsChart') && (
                   <div className="w-full">
                     <FractionsChart
                       chartData={metricsChartData}
                       hierarchyChartData={metricsHierarchyChartData}
                       isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                      widgetConfig={getWidgetConfig('FractionsChart')}
                     />
                   </div>
                 )}
 
-                {shouldRenderWidget('donut_chart') && (
+                {getWidgetConfig('GVFWLRChart') && (
                   <div className="w-full">
                     <div
                       className={`rounded-lg p-2 h-full ${
@@ -545,6 +515,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                         chartData={metricsChartData}
                         hierarchyChartData={metricsHierarchyChartData}
                         isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                        widgetConfig={getWidgetConfig('GVFWLRChart')}
                       />
                     </div>
                   </div>
@@ -552,7 +523,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               </div>
 
               <div className="md:hidden grid grid-cols-1 gap-4 my-4">
-                {shouldRenderWidget('donut_chart') && (
+                {getWidgetConfig('GVFWLRChart') && (
                   <div className="w-full">
                     <div
                       className={`rounded-lg p-2 h-full ${
@@ -565,27 +536,30 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                         chartData={metricsChartData}
                         hierarchyChartData={metricsHierarchyChartData}
                         isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                        widgetConfig={getWidgetConfig('GVFWLRChart')}
                       />
                     </div>
                   </div>
                 )}
 
-                {shouldRenderWidget('fractions_chart') && (
+                {getWidgetConfig('FractionsChart') && (
                   <div className="w-full">
                     <FractionsChart
                       chartData={metricsChartData}
                       hierarchyChartData={metricsHierarchyChartData}
                       isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                      widgetConfig={getWidgetConfig('FractionsChart')}
                     />
                   </div>
                 )}
               </div>
 
-              {shouldRenderWidget('map') && (
+              {getWidgetConfig('ProductionMap') && (
                 <div className="mt-2">
                   <ProductionMap
                     selectedHierarchy={selectedHierarchy}
                     selectedDevice={selectedDevice}
+                    widgetConfig={getWidgetConfig('ProductionMap')}
                   />
                 </div>
               )}
