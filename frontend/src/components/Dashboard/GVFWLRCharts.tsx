@@ -93,18 +93,17 @@ const GVFWLRCharts: React.FC<GVFWLRChartsProps> = ({ chartData, hierarchyChartDa
   ];
 
   return (
-    <div className="p-4">
-      {/* Title */}
-      <div className="flex items-center gap-2 mb-6 relative">
+    <div className="p-4 h-full">
+      <div className="flex items-center gap-2 mb-4 relative">
         <h2
-          className={`text-base font-medium ${
+          className={`text-base font-semibold ${
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           }`}
         >
           {widgetConfig?.dataSourceConfig?.title || 'GVF/WLR'}
         </h2>
         <Info
-          size={16}
+          size={18}
           className={`cursor-pointer ${
             theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
           }`}
@@ -159,8 +158,7 @@ const GVFWLRCharts: React.FC<GVFWLRChartsProps> = ({ chartData, hierarchyChartDa
         )}
       </div>
 
-      {/* Charts Row */}
-      <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-8 lg:gap-12 w-full px-2">
+      <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-10 lg:gap-16 w-full">
         {/* GVF Chart */}
         <div
           ref={chartContainerRef}

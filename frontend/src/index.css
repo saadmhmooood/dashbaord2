@@ -6,7 +6,7 @@
 @tailwind utilities;
 
 body {
-  @apply font-sans;
+  @apply font-sans antialiased;
   background-color: #121429;
   overflow-x: hidden;
 }

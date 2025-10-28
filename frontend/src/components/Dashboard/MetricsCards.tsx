@@ -276,7 +276,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
               : 'bg-white border border-gray-200'
           }`}
         >
-          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+          <div className="flex items-center gap-3 mb-3">
             <div
               className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0"
               style={{ backgroundColor: metric.color }}
@@ -330,7 +330,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({
             isRefreshing ? 'ring-2 ring-blue-400 ring-opacity-50 shadow-lg' : ''
           }`}
         >
-          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+          <div className="flex items-center gap-3 mb-3">
             <div
               className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0"
               style={{ backgroundColor: lastRefreshConfig.color || '#d82e75' }}

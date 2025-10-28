@@ -157,23 +157,23 @@ const FractionsChart: React.FC<FractionsChartProps> = ({
 
   return (
     <div
-      className={`p-4 rounded-lg ${
+      className={`p-4 rounded-lg shadow-sm ${
         theme === 'dark'
           ? 'bg-[#162345] border-none'
           : 'bg-white border border-[#ececec]'
       }`}
     >
-      <div className="flex items-center justify-between py-2 relative">
+      <div className="flex items-center justify-between mb-3 relative">
         <div className="flex items-center gap-2">
           <h2
-            className={`text-base font-medium ${
+            className={`text-base font-semibold ${
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}
           >
             Fractions
           </h2>
           <Info
-            size={16}
+            size={18}
             className={`cursor-pointer ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
             onClick={() => setShowInfoCard(!showInfoCard)}
           />
@@ -195,7 +195,7 @@ const FractionsChart: React.FC<FractionsChartProps> = ({
           )}
         </div>
         <div
-          className={`flex items-center gap-2 border px-2 py-1 rounded-lg ${
+          className={`flex items-center gap-2 border px-3 py-1.5 rounded-lg ${
             theme === 'dark'
               ? 'text-gray-300 border-[#A2AED4]'
               : 'text-gray-600 border-gray-300'
@@ -228,7 +228,7 @@ const FractionsChart: React.FC<FractionsChartProps> = ({
       ) : (
         <>
           <div className="mb-2">
-            <div className="flex gap-6 py-3 text-sm">
+            <div className="flex gap-6 mb-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="w-4 h-[3px] dark:bg-[#4D3DF7] bg-[#38BF9D] rounded" />
                 <span
@@ -267,7 +267,7 @@ const FractionsChart: React.FC<FractionsChartProps> = ({
             </div>
           </div>
 
-          {renderChart(350, false)}
+          {renderChart(320, false)}
         </>
       )}
 

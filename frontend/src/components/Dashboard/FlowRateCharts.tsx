@@ -107,21 +107,20 @@ const FlowRateChart: React.FC<SingleFlowRateChartProps> = ({
 
   return (
     <div
-      className={`rounded-lg p-4 ${theme === 'dark' ? 'bg-[#162345]' : 'bg-white border border-gray-200'}`}
+      className={`rounded-lg p-4 shadow-sm ${theme === 'dark' ? 'bg-[#162345]' : 'bg-white border border-gray-200'}`}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <h3 className={`text-base font-medium ${theme === 'dark' ? 'text-[#fff]' : 'text-[#0f0f0f]'}`}>
+          <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-[#fff]' : 'text-[#0f0f0f]'}`}>
             {title} ({unit})
           </h3>
-          <div className="relative">
-            <Info
-              className={`text-sm cursor-pointer ${theme === 'dark' ? 'text-[#D0CCD8]' : 'text-[#555758]'}`}
-              onClick={onInfoClick}
-            />
-          </div>
+          <Info
+            size={18}
+            className={`cursor-pointer ${theme === 'dark' ? 'text-[#D0CCD8]' : 'text-[#555758]'}`}
+            onClick={onInfoClick}
+          />
         </div>
-        <div className={`flex items-center gap-2 border px-2 py-1 rounded-md ${theme === 'dark' ? 'border-[#D0CCD8] text-gray-400 hover:text-white' : 'border-[#EAEAEA] text-gray-600 hover:text-gray-900'}`}>
+        <div className={`flex items-center gap-2 border px-3 py-1.5 rounded-lg ${theme === 'dark' ? 'border-[#D0CCD8] text-gray-400 hover:text-white' : 'border-[#EAEAEA] text-gray-600 hover:text-gray-900'}`}>
           <ExternalLink
             size={16}
             className="dark:text-white cursor-pointer dark:hover:text-gray-200 transition-colors"
@@ -142,7 +141,7 @@ const FlowRateChart: React.FC<SingleFlowRateChartProps> = ({
         </div>
       </div> */}
 
-      {renderChart(200, false)}
+      {renderChart(240, false)}
     </div>
   );
 };
@@ -322,7 +321,7 @@ const FlowRateCharts: React.FC<FlowRateChartsProps> = ({ chartData, hierarchyCha
 
   return (
     <>
-      <div className="grid md:grid-cols-3 lg:grid-flow-cols-3 grid-cols-1 gap-4">
+      <div className="grid md:grid-cols-3 lg:grid-cols-3 grid-cols-1 gap-4 mb-4">
         {ofrConfig && (
           <div className="relative">
             <FlowRateChart
