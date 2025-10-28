@@ -4,8 +4,12 @@ import { shouldSkipUpdate } from '../../utils/chartUtils';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { apiService, DeviceChartData, HierarchyChartData, Device } from '../../services/api';
-import DynamicDashboard from './DynamicDashboard';
-import WidgetRenderer from './WidgetRenderer';
+import MetricsCards from './MetricsCards';
+import TopRegionsChart from './TopRegionsChart';
+import GVFWLRCharts from './GVFWLRCharts';
+import ProductionMap from './ProductionMap';
+import FlowRateCharts from './FlowRateCharts';
+import FractionsChart from './FractionsChart';
 import { Calendar, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -200,30 +204,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
         if (dashboardsResponse.success && dashboardsResponse.data && dashboardsResponse.data.length > 0) {
           const firstDashboard = dashboardsResponse.data[0];
-          console.log(`[WIDGET SYSTEM FRONTEND] Loading dashboard: ${firstDashboard.name} (${firstDashboard.id})`);
-
           const widgetsResponse = await apiService.getDashboardWidgets(firstDashboard.id, token);
 
           if (widgetsResponse.success && widgetsResponse.data) {
-            console.log(`[WIDGET SYSTEM FRONTEND] Loaded ${widgetsResponse.data.widgets.length} widgets from database`);
-            widgetsResponse.data.widgets.forEach((widget: any, idx: number) => {
-              console.log(`  [${idx + 1}] ${widget.name} (${widget.component})`);
-              console.log(`      Layout: x=${widget.layoutConfig?.x}, y=${widget.layoutConfig?.y}, w=${widget.layoutConfig?.w}, h=${widget.layoutConfig?.h}`);
-              console.log(`      Data: metric=${widget.dataSourceConfig?.metric}, unit=${widget.dataSourceConfig?.unit}`);
-            });
-
             setWidgets(widgetsResponse.data.widgets);
             setDashboardConfig(widgetsResponse.data.dashboard);
             setWidgetsLoaded(true);
-
-            console.log('[WIDGET SYSTEM FRONTEND] ✓ Widgets loaded and state updated');
           }
         } else {
-          console.log('[WIDGET SYSTEM FRONTEND] No dashboards found');
           setWidgetsLoaded(true);
         }
       } catch (error) {
-        console.error('[WIDGET SYSTEM FRONTEND] Error loading dashboard widgets:', error);
+        console.error('[WIDGET SYSTEM] Error loading dashboard widgets:', error);
         setWidgetsLoaded(true);
       }
     };
@@ -474,27 +466,104 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             </div>
           </div>
 
-          {widgetsLoaded && widgets.length > 0 && dashboardConfig && (
-            <DynamicDashboard
-              dashboardId={dashboardConfig.id}
-              widgets={widgets}
-              isEditable={false}
-            >
-              {(widget) => (
-                <WidgetRenderer
-                  widget={widget}
-                  chartData={widget.component === 'MetricsCard' ? metricsChartData : flowRateChartData}
-                  hierarchyChartData={widget.component === 'MetricsCard' ? metricsHierarchyChartData : flowRateHierarchyChartData}
-                  timeRange={timeRange as '1day' | '7days' | '1month'}
-                  lastRefresh={lastRefresh}
-                  isDeviceOffline={
-                    (widget.component === 'MetricsCard' ? metricsChartData : flowRateChartData)?.device?.status === 'Offline'
-                  }
-                  selectedDevice={selectedDevice}
-                  selectedHierarchy={selectedHierarchy}
-                />
+          {widgetsLoaded && getMetricsWidgets().length > 0 && (
+            <MetricsCards
+              selectedHierarchy={selectedHierarchy}
+              selectedDevice={selectedDevice}
+              chartData={metricsChartData}
+              hierarchyChartData={metricsHierarchyChartData}
+              lastRefresh={lastRefresh}
+              isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+              widgetConfigs={getMetricsWidgets()}
+            />
+          )}
+
+          {widgetsLoaded && getChartWidgets().length > 0 && (
+            <FlowRateCharts
+              chartData={flowRateChartData}
+              hierarchyChartData={flowRateHierarchyChartData}
+              timeRange={timeRange as '1day' | '7days' | '1month'}
+              isDeviceOffline={flowRateChartData?.device?.status === 'Offline'}
+              widgetConfigs={getChartWidgets()}
+            />
+          )}
+
+          {widgetsLoaded && (
+            <>
+              <div className="hidden md:grid md:grid-cols-1 lg:grid-cols-2 gap-4 my-4">
+                {getWidgetConfig('FractionsChart') && (
+                  <div className="w-full">
+                    <FractionsChart
+                      chartData={metricsChartData}
+                      hierarchyChartData={metricsHierarchyChartData}
+                      isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                      widgetConfig={getWidgetConfig('FractionsChart')}
+                    />
+                  </div>
+                )}
+
+                {getWidgetConfig('GVFWLRChart') && (
+                  <div className="w-full">
+                    <div
+                      className={`rounded-lg p-2 h-full ${
+                        theme === 'dark'
+                          ? 'bg-[#162345]'
+                          : 'bg-white border border-gray-200'
+                      }`}
+                    >
+                      <GVFWLRCharts
+                        chartData={metricsChartData}
+                        hierarchyChartData={metricsHierarchyChartData}
+                        isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                        widgetConfig={getWidgetConfig('GVFWLRChart')}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="md:hidden grid grid-cols-1 gap-4 my-4">
+                {getWidgetConfig('GVFWLRChart') && (
+                  <div className="w-full">
+                    <div
+                      className={`rounded-lg p-2 h-full ${
+                        theme === 'dark'
+                          ? 'bg-[#162345]'
+                          : 'bg-white border border-gray-200'
+                      }`}
+                    >
+                      <GVFWLRCharts
+                        chartData={metricsChartData}
+                        hierarchyChartData={metricsHierarchyChartData}
+                        isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                        widgetConfig={getWidgetConfig('GVFWLRChart')}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {getWidgetConfig('FractionsChart') && (
+                  <div className="w-full">
+                    <FractionsChart
+                      chartData={metricsChartData}
+                      hierarchyChartData={metricsHierarchyChartData}
+                      isDeviceOffline={metricsChartData?.device?.status === 'Offline'}
+                      widgetConfig={getWidgetConfig('FractionsChart')}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {getWidgetConfig('ProductionMap') && (
+                <div className="mt-2">
+                  <ProductionMap
+                    selectedHierarchy={selectedHierarchy}
+                    selectedDevice={selectedDevice}
+                    widgetConfig={getWidgetConfig('ProductionMap')}
+                  />
+                </div>
               )}
-            </DynamicDashboard>
+            </>
           )}
 
           {/* Version Info */}
