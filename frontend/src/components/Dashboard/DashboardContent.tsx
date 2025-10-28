@@ -8,6 +8,11 @@ import DynamicDashboard from './DynamicDashboard';
 import WidgetRenderer from './WidgetRenderer';
 import { Calendar, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MetricsCards from './MetricsCards';
+import FlowRateCharts from './FlowRateCharts';
+import FractionsChart from './FractionsChart';
+import GVFWLRCharts from './GVFWLRCharts';
+import ProductionMap from './ProductionMap';
 
 interface WidgetConfig {
   layoutId: string;
