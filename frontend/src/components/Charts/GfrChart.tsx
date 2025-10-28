@@ -13,7 +13,7 @@ import {
 import { Info, ExternalLink, MoreHorizontal } from 'lucide-react';
 import { DeviceChartData, HierarchyChartData } from '../../services/api'; // <-- make sure HierarchyChartData is exported from services/api
 import { useTheme } from '../../hooks/useTheme';
-import ChartModal from './ChartModal';
+import ChartModal from './ChartModel';
 
 interface GFRChartProps {
   chartData?: DeviceChartData | null;

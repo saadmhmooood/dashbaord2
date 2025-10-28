@@ -947,6 +947,32 @@ class ApiService {
       },
     });
   }
+
+  async updateDashboardLayouts(
+    dashboardId: string,
+    layouts: Array<{
+      layoutId: string;
+      layoutConfig: {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        minW?: number;
+        minH?: number;
+        static?: boolean;
+      };
+    }>,
+    token: string
+  ): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest(`/widgets/dashboard/${dashboardId}/layout`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ layouts }),
+    });
+  }
 }
 
 export const apiService = new ApiService();
