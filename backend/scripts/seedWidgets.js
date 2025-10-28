@@ -1,6 +1,9 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const database = require('../config/database');
 
 const seedWidgets = async () => {
+  // Connect to database first
+  await database.connect();
   const client = await database.pool.connect();
   try {
     await client.query('BEGIN');
@@ -187,16 +190,23 @@ const seedWidgets = async () => {
     const dashboardId = dashboardResult.rows[0].id;
 
     const layouts = [
-      { widget: 'OFR Metric', x: 0, y: 0, w: 3, h: 1, order: 1 },
-      { widget: 'WFR Metric', x: 3, y: 0, w: 3, h: 1, order: 2 },
-      { widget: 'GFR Metric', x: 6, y: 0, w: 3, h: 1, order: 3 },
-      { widget: 'Last Refresh', x: 9, y: 0, w: 3, h: 1, order: 4 },
-      { widget: 'OFR Chart', x: 0, y: 1, w: 4, h: 2, order: 5 },
-      { widget: 'WFR Chart', x: 4, y: 1, w: 4, h: 2, order: 6 },
-      { widget: 'GFR Chart', x: 8, y: 1, w: 4, h: 2, order: 7 },
-      { widget: 'Fractions Chart', x: 0, y: 3, w: 6, h: 3, order: 8 },
-      { widget: 'GVF/WLR Donut Charts', x: 6, y: 3, w: 6, h: 3, order: 9 },
-      { widget: 'Production Map', x: 0, y: 6, w: 12, h: 3, order: 10 }
+      // Row 1: 4 Metric Cards (each takes 3 columns in a 12-column grid = 4 cards)
+      { widget: 'OFR Metric', x: 0, y: 0, w: 3, h: 1, minW: 2, minH: 1, order: 1 },
+      { widget: 'WFR Metric', x: 3, y: 0, w: 3, h: 1, minW: 2, minH: 1, order: 2 },
+      { widget: 'GFR Metric', x: 6, y: 0, w: 3, h: 1, minW: 2, minH: 1, order: 3 },
+      { widget: 'Last Refresh', x: 9, y: 0, w: 3, h: 1, minW: 2, minH: 1, order: 4 },
+
+      // Row 2: 3 Line Charts (each takes 4 columns in a 12-column grid = 3 charts)
+      { widget: 'OFR Chart', x: 0, y: 1, w: 4, h: 2, minW: 3, minH: 2, order: 5 },
+      { widget: 'WFR Chart', x: 4, y: 1, w: 4, h: 2, minW: 3, minH: 2, order: 6 },
+      { widget: 'GFR Chart', x: 8, y: 1, w: 4, h: 2, minW: 3, minH: 2, order: 7 },
+
+      // Row 3: 2 Charts side by side (each takes 6 columns in a 12-column grid = 2 charts)
+      { widget: 'Fractions Chart', x: 0, y: 3, w: 6, h: 3, minW: 4, minH: 2, order: 8 },
+      { widget: 'GVF/WLR Donut Charts', x: 6, y: 3, w: 6, h: 3, minW: 4, minH: 2, order: 9 },
+
+      // Row 4: Production Map (full width = 12 columns)
+      { widget: 'Production Map', x: 0, y: 6, w: 12, h: 3, minW: 8, minH: 2, order: 10 }
     ];
 
     for (const layout of layouts) {
@@ -211,8 +221,8 @@ const seedWidgets = async () => {
           y: layout.y,
           w: layout.w,
           h: layout.h,
-          minW: 2,
-          minH: 1,
+          minW: layout.minW,
+          minH: layout.minH,
           static: false
         }),
         layout.order
@@ -234,3 +244,16 @@ const seedWidgets = async () => {
 };
 
 module.exports = seedWidgets;
+
+// Execute if run directly
+if (require.main === module) {
+  seedWidgets()
+    .then(() => {
+      console.log('✅ Seeding complete');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('❌ Seeding failed:', error);
+      process.exit(1);
+    });
+}
