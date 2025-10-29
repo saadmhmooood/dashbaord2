@@ -16,21 +16,21 @@ if (typeof protect !== 'function') {
 router.get('/dashboard/:dashboardId', protect, async (req, res) => {
   try {
     const { dashboardId } = req.params;
-    const userId = req.user.id;
+    const userCompanyId = req.user.company_id;
 
     const dashboardQuery = `
       SELECT d.*
       FROM dashboards d
       WHERE d.id = $1
-        AND (d.created_by = $2 OR d.is_active = true)
+        AND (d.company_id = $2 OR d.is_active = true)
     `;
 
-    const dashboardResult = await database.query(dashboardQuery, [dashboardId, userId]);
+    const dashboardResult = await database.query(dashboardQuery, [dashboardId, userCompanyId]);
 
     if (dashboardResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Dashboard not found'
+        message: 'Dashboard not found or access denied'
       });
     }
 
@@ -98,10 +98,11 @@ router.get('/dashboard/:dashboardId', protect, async (req, res) => {
   }
 });
 
-// GET /api/widgets/dashboards
-router.get('/dashboards', protect, async (req, res) => {
+// GET /api/widgets/default-dashboard
+// Get the default dashboard for the user's company
+router.get('/default-dashboard', protect, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userCompanyId = req.user.company_id;
 
     const query = `
       SELECT
@@ -109,12 +110,60 @@ router.get('/dashboards', protect, async (req, res) => {
         COUNT(dl.id) as widget_count
       FROM dashboards d
       LEFT JOIN dashboard_layouts dl ON d.id = dl.dashboard_id
-      WHERE d.created_by = $1 OR d.is_active = true
+      WHERE d.company_id = $1 AND d.is_active = true
+      GROUP BY d.id
+      ORDER BY d.created_at ASC
+      LIMIT 1
+    `;
+
+    const result = await database.query(query, [userCompanyId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No default dashboard found for your company'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        description: result.rows[0].description,
+        version: result.rows[0].version,
+        isActive: result.rows[0].is_active,
+        widgetCount: parseInt(result.rows[0].widget_count, 10),
+        createdAt: result.rows[0].created_at
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching default dashboard:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch default dashboard',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/widgets/dashboards
+router.get('/dashboards', protect, async (req, res) => {
+  try {
+    const userCompanyId = req.user.company_id;
+
+    const query = `
+      SELECT
+        d.*,
+        COUNT(dl.id) as widget_count
+      FROM dashboards d
+      LEFT JOIN dashboard_layouts dl ON d.id = dl.dashboard_id
+      WHERE d.company_id = $1 OR (d.is_active = true AND d.company_id IS NULL)
       GROUP BY d.id
       ORDER BY d.created_at DESC
     `;
 
-    const result = await database.query(query, [userId]);
+    const result = await database.query(query, [userCompanyId]);
 
     res.json({
       success: true,
@@ -473,6 +522,7 @@ router.post('/dashboards', protect, async (req, res) => {
   try {
     const { name, description, gridConfig } = req.body;
     const userId = req.user.id;
+    const companyId = req.user.company_id;
 
     if (!name) {
       return res.status(400).json({
@@ -482,8 +532,8 @@ router.post('/dashboards', protect, async (req, res) => {
     }
 
     const result = await database.query(`
-      INSERT INTO dashboards (name, description, grid_config, created_by)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO dashboards (name, description, grid_config, company_id, created_by)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING id
     `, [
       name,
@@ -495,6 +545,7 @@ router.post('/dashboards', protect, async (req, res) => {
         breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
         containerPadding: [10, 10]
       }),
+      companyId,
       userId
     ]);
 

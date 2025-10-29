@@ -181,13 +181,37 @@ const seedWidgets = async () => {
       widgetDefIds[widget.name] = result.rows[0].id;
     }
 
-    const dashboardResult = await client.query(`
-      INSERT INTO dashboards (name, description, created_by)
-      VALUES ('MPFM Production Dashboard', 'Main production dashboard for MPFM devices', $1)
-      RETURNING id
-    `, [adminId]);
+    const companiesResult = await client.query(`
+      SELECT id, name FROM company ORDER BY id
+    `);
 
-    const dashboardId = dashboardResult.rows[0].id;
+    if (companiesResult.rows.length === 0) {
+      throw new Error('No companies found. Please run seedCompanies first.');
+    }
+
+    console.log(`  • Found ${companiesResult.rows.length} companies`);
+
+    const dashboards = [];
+    for (const company of companiesResult.rows) {
+      const dashboardResult = await client.query(`
+        INSERT INTO dashboards (name, description, company_id, created_by, is_active)
+        VALUES ($1, $2, $3, $4, true)
+        RETURNING id
+      `, [
+        `${company.name} Production Dashboard`,
+        `Main production dashboard for ${company.name}`,
+        company.id,
+        adminId
+      ]);
+
+      dashboards.push({
+        id: dashboardResult.rows[0].id,
+        companyId: company.id,
+        companyName: company.name
+      });
+
+      console.log(`  • Created dashboard for ${company.name}`);
+    }
 
     const layouts = [
       // Row 1: 4 Metric Cards (each takes 3 columns in a 12-column grid = 4 cards)
@@ -209,31 +233,35 @@ const seedWidgets = async () => {
       { widget: 'Production Map', x: 0, y: 6, w: 12, h: 3, minW: 8, minH: 2, order: 10 }
     ];
 
-    for (const layout of layouts) {
-      await client.query(`
-        INSERT INTO dashboard_layouts (dashboard_id, widget_definition_id, layout_config, display_order)
-        VALUES ($1, $2, $3, $4)
-      `, [
-        dashboardId,
-        widgetDefIds[layout.widget],
-        JSON.stringify({
-          x: layout.x,
-          y: layout.y,
-          w: layout.w,
-          h: layout.h,
-          minW: layout.minW,
-          minH: layout.minH,
-          static: false
-        }),
-        layout.order
-      ]);
+    // Create layouts for each company dashboard
+    for (const dashboard of dashboards) {
+      for (const layout of layouts) {
+        await client.query(`
+          INSERT INTO dashboard_layouts (dashboard_id, widget_definition_id, layout_config, display_order)
+          VALUES ($1, $2, $3, $4)
+        `, [
+          dashboard.id,
+          widgetDefIds[layout.widget],
+          JSON.stringify({
+            x: layout.x,
+            y: layout.y,
+            w: layout.w,
+            h: layout.h,
+            minW: layout.minW,
+            minH: layout.minH,
+            static: false
+          }),
+          layout.order
+        ]);
+      }
     }
 
     await client.query('COMMIT');
     console.log('✅ Widget system seeded successfully');
     console.log(`  • Created ${widgetTypes.length} widget types`);
     console.log(`  • Created ${allWidgets.length} widget definitions`);
-    console.log(`  • Created 1 dashboard with ${layouts.length} widgets`);
+    console.log(`  • Created ${dashboards.length} dashboards (one per company)`);
+    console.log(`  • Each dashboard has ${layouts.length} widgets`);
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ Error seeding widgets:', error);

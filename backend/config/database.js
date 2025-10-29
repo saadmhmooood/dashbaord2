@@ -240,6 +240,7 @@ class Database {
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           name VARCHAR(200) NOT NULL,
           description TEXT,
+          company_id BIGINT REFERENCES company(id) ON DELETE CASCADE,
           version INTEGER DEFAULT 1,
           is_active BOOLEAN DEFAULT TRUE,
           grid_config JSONB NOT NULL DEFAULT '{"cols": 12, "rowHeight": 100, "margin": [10, 10], "breakpoints": {"lg": 1200, "md": 996, "sm": 768, "xs": 480, "xxs": 0}, "containerPadding": [10, 10]}',

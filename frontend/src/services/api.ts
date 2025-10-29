@@ -904,6 +904,23 @@ class ApiService {
     });
   }
 
+  async getDefaultDashboard(token: string): Promise<ApiResponse<{
+    id: string;
+    name: string;
+    description: string;
+    version: number;
+    isActive: boolean;
+    widgetCount: number;
+    createdAt: string;
+  }>> {
+    return this.makeRequest('/widgets/default-dashboard', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
   async getDashboardWidgets(dashboardId: string, token: string): Promise<ApiResponse<{
     dashboard: {
       id: string;
